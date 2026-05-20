@@ -1,0 +1,79 @@
+# mycelium-agt
+
+Community plugin for the [Agent Governance Toolkit (AGT)](https://github.com/microsoft/agent-governance-toolkit) `EvidenceAnchor` SPI, backed by **Mycelium Trails** on Arbitrum.
+
+Evidence hashes are written as immutable trail records via the public `argentum.rgiskard.xyz` API. Once anchored, records cannot be modified or deleted.
+
+## Install
+
+```bash
+pip install mycelium-agt
+```
+
+## Usage
+
+```python
+from mycelium_agt import MyceliumAnchor
+
+anchor = MyceliumAnchor(agent_id="my-agent")
+
+# Anchor an evidence hash
+receipt = anchor.anchor(
+    evidence_hash="sha256:abc123...",
+    metadata={"action_type": "file:write", "scope": "audit"},
+)
+print(receipt.anchor_id)      # trail_id in Mycelium Trails
+print(receipt.anchored_at)    # RFC 3339 UTC timestamp
+
+# Verify later
+result = anchor.verify("sha256:abc123...", receipt)
+print(result.status)          # AnchorVerifyStatus.VERIFIED
+print(result.inclusion_proof.proof_data["tx_hash"])
+```
+
+## How it works
+
+`MyceliumAnchor` implements the AGT `EvidenceAnchor` abstract class:
+
+- **`anchor(evidence_hash, metadata)`** — POSTs a trail record to `https://argentum.rgiskard.xyz/trails`. Returns an `AnchorReceipt` with a `trail_id` and deterministic `action_ref` (RFC 8785 JCS + SHA-256).
+
+- **`verify(evidence_hash, receipt)`** — Confirms the hash via `GET /trails/verify?action_ref=...` (or falls back to `GET /trails/{trail_id}`). Returns an `AnchorVerifyResult` with status `VERIFIED | NOT_FOUND | HASH_MISMATCH | BACKEND_UNAVAILABLE` and an Arbiscan inclusion proof.
+
+## Registration with AGT
+
+```python
+from mycelium_agt import MyceliumAnchor
+
+# Register with the AGT evidence registry
+agt_registry.register("mycelium", MyceliumAnchor(agent_id="my-agent"))
+```
+
+## Metadata keys
+
+All optional:
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `agent_id` | instance `agent_id` | Override per-call |
+| `action_type` | `"agt:evidence_anchor"` | Semantic label for the action |
+| `scope` | `"agt-evidence"` | Trail scope |
+| `parent_trail_id` | — | Link to parent trail |
+| `root_trail_id` | — | Link to root of a trail chain |
+
+## action_ref
+
+Each anchored record gets a deterministic `action_ref`:
+
+```
+SHA-256(JCS({"agent_id": ..., "action_type": ..., "scope": ..., "timestamp": ...}))
+```
+
+This allows re-derivation and cross-system verification without trusting the receipt alone.
+
+## Failure semantics
+
+`anchor()` raises `RuntimeError` on network failure. The AGT runtime applies mode semantics (`enforce` / `queue` / `best_effort`). `verify()` never raises — it returns `BACKEND_UNAVAILABLE` on network errors.
+
+## License
+
+Apache 2.0

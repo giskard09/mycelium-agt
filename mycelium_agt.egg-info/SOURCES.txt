@@ -1,0 +1,15 @@
+LICENSE
+README.md
+pyproject.toml
+mycelium_agt/__init__.py
+mycelium_agt/action_ref.py
+mycelium_agt/anchor.py
+mycelium_agt/types.py
+mycelium_agt.egg-info/PKG-INFO
+mycelium_agt.egg-info/SOURCES.txt
+mycelium_agt.egg-info/dependency_links.txt
+mycelium_agt.egg-info/requires.txt
+mycelium_agt.egg-info/top_level.txt
+mycelium_agt/tests/__init__.py
+mycelium_agt/tests/test_action_ref.py
+mycelium_agt/tests/test_anchor.py

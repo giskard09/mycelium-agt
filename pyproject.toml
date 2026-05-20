@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mycelium-agt"
+version = "0.1.0"
+description = "Mycelium Trails community plugin for the AGT EvidenceAnchor SPI"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.9"
+keywords = ["agt", "agent-governance", "mycelium", "trails", "evidence", "audit"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "requests>=2.28",
+]
+
+[project.urls]
+Homepage = "https://github.com/giskard09/mycelium-agt"
+Repository = "https://github.com/giskard09/mycelium-agt"
+Documentation = "https://argentum.rgiskard.xyz"
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-cov"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mycelium_agt*"]
+
+[tool.pytest.ini_options]
+testpaths = ["mycelium_agt/tests"]
