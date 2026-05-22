@@ -13,6 +13,7 @@ Usage:
 """
 
 from .anchor import MyceliumAnchor
+from .action_ref import compute_action_ref, format_timestamp
 from .types import (
     AnchorReceipt,
     AnchorVerifyResult,
@@ -21,10 +22,12 @@ from .types import (
     InclusionProof,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "MyceliumAnchor",
+    "compute_action_ref",
+    "format_timestamp",
     "EvidenceAnchor",
     "AnchorReceipt",
     "AnchorVerifyResult",
