@@ -20,6 +20,12 @@ from __future__ import annotations
 import datetime
 import hashlib
 import json
+import re
+
+# RFC 3339 UTC with exactly 3 ms digits: "2026-05-15T10:00:00.123Z"
+_TS_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"
+)
 
 
 def _jcs_encode(d: dict[str, str]) -> bytes:
@@ -54,16 +60,21 @@ def compute_action_ref(
 ) -> str:
     """Derive action_ref from the four canonical fields.
 
-    timestamp must already be in RFC 3339 UTC format with 3-digit ms precision
+    timestamp must be in RFC 3339 UTC format with 3-digit ms precision
     (e.g. "2026-05-15T10:00:00.123Z"). Use format_timestamp() to produce it
-    from a datetime object.
+    from a datetime object. Raises ValueError for invalid format.
 
     Returns the SHA-256 hex digest (64 lowercase hex characters).
     """
+    if not _TS_RE.match(timestamp):
+        raise ValueError(
+            f"timestamp must be RFC 3339 UTC with 3-digit ms precision "
+            f"(e.g. '2026-05-15T10:00:00.123Z'), got: {timestamp!r}"
+        )
     payload = {
-        "agent_id": agent_id,
-        "action_type": action_type,
-        "scope": scope,
+        "agent_id": str(agent_id),
+        "action_type": str(action_type),
+        "scope": str(scope),
         "timestamp": timestamp,
     }
     canonical = _jcs_encode(payload)

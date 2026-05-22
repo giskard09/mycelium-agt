@@ -86,3 +86,36 @@ def test_format_timestamp_ends_with_Z():
     # ms part is always 3 digits
     ms_part = result.split(".")[1].rstrip("Z")
     assert len(ms_part) == 3
+
+
+# --- timestamp validation ---
+
+@pytest.mark.parametrize("bad_ts", [
+    "",
+    "not-a-timestamp",
+    "2026-05-15T10:00:00Z",           # missing ms
+    "2026-05-15T10:00:00.1Z",         # 1-digit ms
+    "2026-05-15T10:00:00.12Z",        # 2-digit ms
+    "2026-05-15T10:00:00.1234Z",      # 4-digit ms
+    "2026-05-15 10:00:00.123Z",       # space instead of T
+    "2026-05-15T10:00:00.123+00:00",  # offset instead of Z
+    "2026-05-15T10:00:00.123",        # missing Z
+])
+def test_compute_action_ref_invalid_timestamp_raises(bad_ts):
+    with pytest.raises(ValueError, match="RFC 3339"):
+        compute_action_ref("agent-1", "file:write", "audit", bad_ts)
+
+
+def test_compute_action_ref_valid_timestamp_does_not_raise():
+    # Should not raise for a well-formed timestamp
+    ref = compute_action_ref("agent-1", "file:write", "audit", "2026-05-15T00:00:00.000Z")
+    assert len(ref) == 64
+
+
+# --- scope coercion ---
+
+def test_compute_action_ref_numeric_scope_coerced_to_string():
+    # Passing a numeric scope should not break JCS — str() coercion applies
+    ref_str = compute_action_ref("a", "b", "1", "2026-01-01T00:00:00.000Z")
+    ref_num = compute_action_ref("a", "b", 1, "2026-01-01T00:00:00.000Z")  # type: ignore[arg-type]
+    assert ref_str == ref_num
